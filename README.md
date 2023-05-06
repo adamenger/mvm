@@ -3,7 +3,7 @@ mvm is a little utility that will generate a video with an imperfect EQ of your 
 
 Order of operations:
 1. mvm takes a WAV file as input
-2. Creates a spectrogram
+2. Creates a spectrogram from wav data
 3. Normalizes spectrogram
 4. Then draws shapes for each frequency band to create a video with a unique EQ visualization
 5. Renders shapes onto frames which are output in named order
