@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-  "log"
 	"github.com/fogleman/gg"
 	"github.com/mjibson/go-dsp/fft"
 	"github.com/mjibson/go-dsp/wav"
@@ -11,6 +10,7 @@ import (
 	"image"
 	"image/color"
 	"io"
+	"log"
 	"math"
 	"math/cmplx"
 	"os"
@@ -30,7 +30,7 @@ func main() {
 	frameOutputDir := flag.String("frame-dir", "frames", "directory used for frame output")
 	outputFile := flag.String("output-file", "output.mp4", "file to write output to")
 	windowSize := flag.Int("window-size", 4096, "window size")
-  keepFrames := flag.Bool("keep-frames", false, "whether or not to keep the frames output directory, default: false")
+	keepFrames := flag.Bool("keep-frames", false, "whether or not to keep the frames output directory, default: false")
 
 	flag.Parse()
 
@@ -72,7 +72,7 @@ func main() {
 
 	nWorkers := 8 // Number of concurrent workers
 	nFrames := len(normalizedSpectrogram)
-  frameRate := 2.0 / frameDuration
+	frameRate := 2.0 / frameDuration
 	jobs := make(chan int, nFrames)
 	results := make(chan error, nFrames)
 	hashValue := generateHash(*inputWAVFile)
@@ -129,18 +129,18 @@ func main() {
 		return
 	}
 
-  // remove frames
-  if !*keepFrames {
-    err := os.RemoveAll(*frameOutputDir)
-    if err != nil {
-      log.Fatal(err)
-    }
-    colorLog(colorGreen, "cleaning up...removed frames directory")
-  } else {
-    colorLog(colorYellow, "leaving frames behind")
-  }
+	// remove frames
+	if !*keepFrames {
+		err := os.RemoveAll(*frameOutputDir)
+		if err != nil {
+			log.Fatal(err)
+		}
+		colorLog(colorGreen, "cleaning up...removed frames directory")
+	} else {
+		colorLog(colorYellow, "leaving frames behind")
+	}
 
-  colorLog(colorRed, fmt.Sprintf("your music video is ready!!: %s", *outputFile))
+	colorLog(colorRed, fmt.Sprintf("your music video is ready!!: %s", *outputFile))
 }
 
 func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64) image.Image {
@@ -199,29 +199,29 @@ func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64)
 }
 
 func createSpectrogram(samples []float64, sampleRate int, windowSize int) ([][]float64, float64) {
-        colorLog(colorGreen, "creating spectrogram")
-        stepSize := windowSize // Set stepSize equal to windowSize, no overlap
-        nFrames := (len(samples)-windowSize)/stepSize + 1
+	colorLog(colorGreen, "creating spectrogram")
+	stepSize := windowSize // Set stepSize equal to windowSize, no overlap
+	nFrames := (len(samples)-windowSize)/stepSize + 1
 
-        spectrogram := make([][]float64, nFrames)
-        for i := 0; i < nFrames; i++ {
-                start := i * stepSize
-                end := start + windowSize
+	spectrogram := make([][]float64, nFrames)
+	for i := 0; i < nFrames; i++ {
+		start := i * stepSize
+		end := start + windowSize
 
-                windowedSamples := applyHannWindow(samples[start:end])
-                fftBuf := fft.FFTReal(windowedSamples)
-                halfFFT := len(fftBuf) / 2
-                magnitudes := make([]float64, halfFFT)
+		windowedSamples := applyHannWindow(samples[start:end])
+		fftBuf := fft.FFTReal(windowedSamples)
+		halfFFT := len(fftBuf) / 2
+		magnitudes := make([]float64, halfFFT)
 
-                for j, value := range fftBuf[:halfFFT] {
-                        magnitudes[j] = cmplx.Abs(value) / float64(windowSize)
-                }
+		for j, value := range fftBuf[:halfFFT] {
+			magnitudes[j] = cmplx.Abs(value) / float64(windowSize)
+		}
 
-                spectrogram[i] = magnitudes
-        }
+		spectrogram[i] = magnitudes
+	}
 
-        frameDuration := float64(stepSize) / float64(sampleRate)
-        return spectrogram, frameDuration
+	frameDuration := float64(stepSize) / float64(sampleRate)
+	return spectrogram, frameDuration
 }
 
 func createMP4(inputWAVFile, frameOutputDir, outputMP4File string, frameRate float64, duration float64) error {
@@ -230,7 +230,7 @@ func createMP4(inputWAVFile, frameOutputDir, outputMP4File string, frameRate flo
 	inputPattern := filepath.Join(frameOutputDir, "frame%05d.png")
 	args := []string{
 		"-r", fmt.Sprintf("%.2f", frameRate), // Frame rate
-    "-thread_queue_size", "2048",
+		"-thread_queue_size", "2048",
 		"-i", inputPattern,
 		"-i", inputWAVFile,
 		"-c:v", "libx264", // Video codec
@@ -261,35 +261,35 @@ func applyHannWindow(samples []float64) []float64 {
 }
 
 func normalizeSpectrogram(spectrogram [][]float64) [][]float64 {
-    normalizedSpectrogram := make([][]float64, len(spectrogram))
-    globalMaxMagnitude := 0.0
-    globalMinMagnitude := math.MaxFloat64
+	normalizedSpectrogram := make([][]float64, len(spectrogram))
+	globalMaxMagnitude := 0.0
+	globalMinMagnitude := math.MaxFloat64
 
-    // Find global maximum and minimum magnitude values
-    for _, frame := range spectrogram {
-        for _, magnitude := range frame {
-            if magnitude > globalMaxMagnitude {
-                globalMaxMagnitude = magnitude
-            }
-            if magnitude < globalMinMagnitude {
-                globalMinMagnitude = magnitude
-            }
-        }
-    }
+	// Find global maximum and minimum magnitude values
+	for _, frame := range spectrogram {
+		for _, magnitude := range frame {
+			if magnitude > globalMaxMagnitude {
+				globalMaxMagnitude = magnitude
+			}
+			if magnitude < globalMinMagnitude {
+				globalMinMagnitude = magnitude
+			}
+		}
+	}
 
-    // Normalize the spectrogram using global maximum and minimum magnitude values
-    for i, frame := range spectrogram {
-        normalizedFrame := make([]float64, len(frame))
-        for j, magnitude := range frame {
-            normalizedMagnitude := (magnitude - globalMinMagnitude) / (globalMaxMagnitude - globalMinMagnitude)
-            normalizedMagnitude = math.Log10(normalizedMagnitude*15.0 + 1.0)
-            normalizedFrame[j] = normalizedMagnitude
-        }
-        normalizedSpectrogram[i] = normalizedFrame
-    }
+	// Normalize the spectrogram using global maximum and minimum magnitude values
+	for i, frame := range spectrogram {
+		normalizedFrame := make([]float64, len(frame))
+		for j, magnitude := range frame {
+			normalizedMagnitude := (magnitude - globalMinMagnitude) / (globalMaxMagnitude - globalMinMagnitude)
+			normalizedMagnitude = math.Log10(normalizedMagnitude*15.0 + 1.0)
+			normalizedFrame[j] = normalizedMagnitude
+		}
+		normalizedSpectrogram[i] = normalizedFrame
+	}
 
-    colorLog(colorGreen, "normalized spectrogram")
-    return normalizedSpectrogram
+	colorLog(colorGreen, "normalized spectrogram")
+	return normalizedSpectrogram
 }
 
 func generateHash(inputWAVFile string) uint64 {

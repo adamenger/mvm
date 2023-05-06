@@ -1,7 +1,7 @@
 package main
 
 import (
-  "log"
+	"log"
 )
 
 const (
@@ -16,5 +16,5 @@ const (
 )
 
 func colorLog(color, message string) {
-    log.Println(color + message + colorReset)
+	log.Println(color + message + colorReset)
 }
