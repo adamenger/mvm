@@ -16,6 +16,25 @@ Usage of ./mvm:
         window size (default 4096)
 ```
 
+## Example Run
+```
+./mvm --frame-dir=/mnt/c/users/adame/downloads/frames --input-file input4.wav --output-file /mnt/c/users/adame/Downloads/output.mp4
+2023/05/06 09:39:39 successfully read input4.wav
+2023/05/06 09:39:39 creating spectrogram
+2023/05/06 09:39:41 normalized spectrogram
+2023/05/06 09:39:41 generated hash
+2023/05/06 09:39:41 rendering frames
+[==================================================] 100% (3100/3100)
+2023/05/06 09:40:08 sending frames to ffmpeg
+ffmpeg version 4.2.7-0ubuntu0.1 Copyright (c) 2000-2022 the FFmpeg developers
+....ffmpeg output
+....ffmpeg output
+2023/05/06 09:40:44 cleaning up...removed frames directory
+2023/05/06 09:40:44 your music video is ready!!: /mnt/c/users/adame/Downloads/output.mp4
+```
+
+The video below is the result which is in `output.mp4` in this example.
+
 ## Example Video
 
 Click the screenshot below to view video on YouTube
