@@ -16,7 +16,4 @@ Usage of ./mvm:
         window size (default 4096)
 ```
 
-Example: 
-[![Programatically producing music videos in golang]          // Title
-(https://i.ytimg.com/vi/cq-IgXrLC_4/maxresdefault.jpg)] // Thumbnail
-(https://www.youtube.com/watch?v=cq-IgXrLC_4 "Programmatically making music videos with golang")    // Video Link
+[Example Video on youtube](https://www.youtube.com/watch?v=cq-IgXrLC_)
