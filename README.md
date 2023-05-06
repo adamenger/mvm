@@ -1,7 +1,7 @@
 # mvm - music video maker
 mvm is a little utility that will generate an imperfect EQ of your incoming audio.
 
-Usage:
+# Usage:
 ```
 Usage of ./mvm:
   -frame-dir string
@@ -16,4 +16,7 @@ Usage of ./mvm:
         window size (default 4096)
 ```
 
-[Example Video on youtube](https://www.youtube.com/watch?v=cq-IgXrLC_)
+## Example Video
+
+Click the screenshot below to view video on youtube
+[![example video](https://i.ytimg.com/vi/cq-IgXrLC_4/hqdefault.jpg)](https://www.youtube.com/watch?v=cq-IgXrLC_4)
