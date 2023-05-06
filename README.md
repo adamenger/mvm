@@ -1,5 +1,5 @@
 # mvm - music video maker
-mvm is a little utility that will generate an imperfect EQ of your incoming audio.
+mvm is a little utility that will generate a video with an imperfect EQ of your incoming audio.
 
 # Usage:
 ```
