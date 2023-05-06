@@ -31,6 +31,7 @@ func main() {
 	outputFile := flag.String("output-file", "output.mp4", "file to write output to")
 	windowSize := flag.Int("window-size", 4096, "window size")
 	keepFrames := flag.Bool("keep-frames", false, "whether or not to keep the frames output directory, default: false")
+	scaleFactor := flag.Int("scale-factor", 2, "adjust this value to change the shape movement")
 
 	flag.Parse()
 
@@ -61,8 +62,9 @@ func main() {
 
 	sampleRate := int(decoder.SampleRate)
 	duration := float64(len(samples)) / float64(sampleRate)
+  numBins := 128
 	spectrogram, frameDuration := createSpectrogram(sampleBuf, sampleRate, *windowSize)
-	normalizedSpectrogram := normalizeSpectrogram(spectrogram)
+	normalizedSpectrogram := normalizeSpectrogram(spectrogram, sampleRate, numBins)
 
 	// generate PNG images
 	if err := os.MkdirAll(*frameOutputDir, 0755); err != nil {
@@ -82,7 +84,7 @@ func main() {
 		go func() {
 			for i := range jobs {
 				frame := normalizedSpectrogram[i]
-				img := renderFrame(frame, i, nFrames, hashValue)
+				img := renderFrame(frame, i, nFrames, hashValue, float64(*scaleFactor))
 				outputFile := filepath.Join(*frameOutputDir, fmt.Sprintf("frame%05d.png", i))
 				err := gg.SavePNG(outputFile, img)
 				results <- err
@@ -143,7 +145,7 @@ func main() {
 	colorLog(colorRed, fmt.Sprintf("your music video is ready!!: %s", *outputFile))
 }
 
-func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64) image.Image {
+func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64, scaleFactor float64) image.Image {
 	width := 1280
 	if width%2 != 0 {
 		width += 1 // Ensure width is divisible by 2
@@ -161,8 +163,6 @@ func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64)
 	barWidth := float64(width) / float64(numBars)
 	frameLen := len(frame)
 	binSize := frameLen / numBars
-
-	scaleFactor := 15.0 // Adjust this value to change the shape movement
 
 	for i := 0; i < numBars; i++ {
 		startBin := i * binSize
@@ -260,13 +260,52 @@ func applyHannWindow(samples []float64) []float64 {
 	return windowed
 }
 
-func normalizeSpectrogram(spectrogram [][]float64) [][]float64 {
-	normalizedSpectrogram := make([][]float64, len(spectrogram))
+func hertzToMel(freq float64) float64 {
+	return 1127.0 * math.Log10(1+freq/700.0)
+}
+
+func melToHertz(mel float64) float64 {
+	return 700.0 * (math.Pow(10, mel/1127.0) - 1)
+}
+
+func redistributeMel(spectrogram [][]float64, sampleRate int, numBins int) [][]float64 {
+	melSpectrogram := make([][]float64, len(spectrogram))
+
+	lowFreqMel := hertzToMel(0)
+	highFreqMel := hertzToMel(float64(sampleRate / 2))
+	melStep := (highFreqMel - lowFreqMel) / float64(numBins+1)
+
+	for i, frame := range spectrogram {
+		melBins := make([]float64, numBins)
+		for j := 0; j < numBins; j++ {
+			melLow := melToHertz(lowFreqMel + melStep*float64(j))
+			melHigh := melToHertz(lowFreqMel + melStep*float64(j+1))
+			startBin := int(melLow / float64(sampleRate/2) * float64(len(frame)))
+			endBin := int(melHigh / float64(sampleRate/2) * float64(len(frame)))
+
+			avgValue := 0.0
+			for _, value := range frame[startBin:endBin] {
+				avgValue += value
+			}
+			avgValue /= float64(endBin - startBin)
+			melBins[j] = avgValue
+		}
+		melSpectrogram[i] = melBins
+	}
+
+	return melSpectrogram
+}
+
+func normalizeSpectrogram(spectrogram [][]float64, sampleRate int, numBins int) [][]float64 {
+	// Redistribute the frequencies using the Mel scale
+	melSpectrogram := redistributeMel(spectrogram, sampleRate, numBins)
+
+	// Normalize the mel spectrogram as before
+	normalizedSpectrogram := make([][]float64, len(melSpectrogram))
 	globalMaxMagnitude := 0.0
 	globalMinMagnitude := math.MaxFloat64
 
-	// Find global maximum and minimum magnitude values
-	for _, frame := range spectrogram {
+	for _, frame := range melSpectrogram {
 		for _, magnitude := range frame {
 			if magnitude > globalMaxMagnitude {
 				globalMaxMagnitude = magnitude
@@ -277,8 +316,7 @@ func normalizeSpectrogram(spectrogram [][]float64) [][]float64 {
 		}
 	}
 
-	// Normalize the spectrogram using global maximum and minimum magnitude values
-	for i, frame := range spectrogram {
+	for i, frame := range melSpectrogram {
 		normalizedFrame := make([]float64, len(frame))
 		for j, magnitude := range frame {
 			normalizedMagnitude := (magnitude - globalMinMagnitude) / (globalMaxMagnitude - globalMinMagnitude)
