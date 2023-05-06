@@ -18,5 +18,6 @@ Usage of ./mvm:
 
 ## Example Video
 
-Click the screenshot below to view video on youtube
+Click the screenshot below to view video on YouTube
+
 [![example video](https://i.ytimg.com/vi/cq-IgXrLC_4/hqdefault.jpg)](https://www.youtube.com/watch?v=cq-IgXrLC_4)
