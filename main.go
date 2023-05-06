@@ -144,11 +144,11 @@ func main() {
 }
 
 func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64) image.Image {
-	width := 512
+	width := 1280
 	if width%2 != 0 {
 		width += 1 // Ensure width is divisible by 2
 	}
-	height := 100
+	height := 720
 	if height%2 != 0 {
 		height += 1 // Ensure height is divisible by 2
 	}
