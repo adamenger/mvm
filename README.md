@@ -1,0 +1,22 @@
+# mvm - music video maker
+mvm is a little utility that will generate an imperfect EQ of your incoming audio.
+
+Usage:
+```
+Usage of ./mvm:
+  -frame-dir string
+        directory used for frame output (default "frames")
+  -input-file string
+        The file to use for input to the music video maker (default "input.wav")
+  -keep-frames
+        whether or not to keep the frames output directory, default: false
+  -output-file string
+        file to write output to (default "output.mp4")
+  -window-size int
+        window size (default 4096)
+```
+
+Example: 
+[![Programatically producing music videos in golang]          // Title
+(https://i.ytimg.com/vi/cq-IgXrLC_4/maxresdefault.jpg)] // Thumbnail
+(https://www.youtube.com/watch?v=cq-IgXrLC_4 "Programmatically making music videos with golang")    // Video Link
