@@ -1,6 +1,9 @@
 # mvm - music video maker
 mvm is a little utility that will generate a video with an imperfect EQ of your incoming audio.
 
+# Installing
+Clone repo and run `make`
+
 # Usage:
 ```
 Usage of ./mvm:
