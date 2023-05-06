@@ -1,8 +1,18 @@
 # mvm - music video maker
-mvm is a little utility that will generate a video with an imperfect EQ of your incoming audio.
+mvm is a little utility that will generate a video with an imperfect EQ of your incoming audio. 
+
+Order of operations:
+1. mvm takes a WAV file as input
+2. Creates a spectrogram
+3. Normalizes spectrogram
+4. Then draws shapes for each frequency band to create a video with a unique EQ visualization
+5. Renders shapes onto frames which are output in named order
+6. Frames are sent to ffmpeg for rendering
 
 # Installing
-Clone repo and run `make`
+Clone repo and run `make`.
+
+You will also need `ffmpeg` installed.
 
 # Usage:
 ```
