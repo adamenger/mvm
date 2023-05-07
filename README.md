@@ -17,39 +17,74 @@ You will also need `ffmpeg` installed.
 # Usage:
 ```
 Usage of ./mvm:
+  -bar-count int
+        number of eq bars to render, more bars equals thinner bars overall. 32, 64, 128 are good places to start (default 64)
+  -base-color string
+        base color used to color the EQ bars, accepts a hex value (default "ffffff")
   -frame-dir string
         directory used for frame output (default "frames")
+  -hpf int
+        high pass filter, used to cut off lower frequencies which can overpower the bottom end of the visualization
   -input-file string
         The file to use for input to the music video maker (default "input.wav")
   -keep-frames
-        whether or not to keep the frames output directory, default: false
+        whether or not to keep the frames output directory
   -output-file string
         file to write output to (default "output.mp4")
+  -rainbow
+        rainbow mode does exactly what it says, applies a gradient rainbow to the EQ
+  -scale-factor float
+        adjust this value to change the shape movement, you may want to up the hpf when upping scale-factor
   -window-size int
-        window size (default 4096)
+        sample window size (default 4096)
 ```
 
 ## Example Run
 ```
-./mvm --frame-dir=/mnt/c/users/adame/downloads/frames --input-file input4.wav --output-file /mnt/c/users/adame/Downloads/output.mp4
-2023/05/06 09:39:39 successfully read input4.wav
-2023/05/06 09:39:39 creating spectrogram
-2023/05/06 09:39:41 normalized spectrogram
-2023/05/06 09:39:41 generated hash
-2023/05/06 09:39:41 rendering frames
-[==================================================] 100% (3100/3100)
-2023/05/06 09:40:08 sending frames to ffmpeg
+./mvm --frame-dir=/mnt/c/users/adame/downloads/frames --input-file input.wav --output-file /mnt/c/users/adame/Downloads/output4.mp4 -scale-factor 2.0 -hpf 30 -bar-count 32 --rainbow
+2023/05/06 19:30:11 successfully read input.wav
+2023/05/06 19:30:11 decoded sample input.wav
+2023/05/06 19:30:11 applying high-pass filter
+2023/05/06 19:30:11 creating spectrogram
+2023/05/06 19:30:13 normalized spectrogram
+2023/05/06 19:30:13 created output dir for frames /mnt/c/users/adame/downloads/frames
+2023/05/06 19:30:13 generated hash
+2023/05/06 19:30:13 rendering frames
+[==================================================] 100% (6199/6199)
+2023/05/06 19:31:46 sending frames to ffmpeg
 ffmpeg version 4.2.7-0ubuntu0.1 Copyright (c) 2000-2022 the FFmpeg developers
-....ffmpeg output
-....ffmpeg output
-2023/05/06 09:40:44 cleaning up...removed frames directory
-2023/05/06 09:40:44 your music video is ready!!: /mnt/c/users/adame/Downloads/output.mp4
+  built with gcc 9 (Ubuntu 9.4.0-1ubuntu1~20.04.1)
+...ffmpeg output
+...ffmpeg output
+...ffmpeg output
+2023/05/06 19:33:32 cleaning up...removing frames directory
+2023/05/06 19:33:48 frames deleted
+2023/05/06 19:33:48 Your music video is ready at /mnt/c/users/adame/Downloads/output4.mp4
 ```
 
-The video below is the result which is in `output.mp4` in this example.
+## Example Video 1
 
-## Example Video
+In this run, we have the following arguments set:
+* --scale-factor 2.0
+* --hpf 30
+* --bar-count 16
+* --base-color f28500 # should be a tangerine orange
+[![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)
 
-Click the screenshot below to view video on YouTube
+## Example Video 2
 
+In this run, we have the following arguments set:
+* --scale-factor 2.0
+* --hpf 30
+* --bar-count 32
+* --rainbow
+[![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)
+
+## Example Video 3
+
+In this run, we have the following arguments set:
+* --scale-factor 5.0
+* --hpf 30
+* --bar-count 64
+* --rainbow
 [![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)

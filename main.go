@@ -16,6 +16,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
 )
 
 type Shape struct {
@@ -26,12 +29,23 @@ type Shape struct {
 
 func main() {
 
+	// file based flags
 	inputWAVFile := flag.String("input-file", "input.wav", "The file to use for input to the music video maker")
 	frameOutputDir := flag.String("frame-dir", "frames", "directory used for frame output")
 	outputFile := flag.String("output-file", "output.mp4", "file to write output to")
-	windowSize := flag.Int("window-size", 4096, "window size")
-	keepFrames := flag.Bool("keep-frames", false, "whether or not to keep the frames output directory, default: false")
-	scaleFactor := flag.Int("scale-factor", 2, "adjust this value to change the shape movement")
+	keepFrames := flag.Bool("keep-frames", false, "whether or not to keep the frames output directory")
+
+	// windowSize is how big each "window" in the sample is.
+	windowSize := flag.Int("window-size", 4096, "sample window size")
+
+	// scaleFactor increases the responsiveness of each bar in the EQ. Set it too high and most bars will just stay at maximum height
+	scaleFactor := flag.Float64("scale-factor", 0.0, "adjust this value to change the shape movement, you may want to up the hpf when upping scale-factor")
+	hpf := flag.Int("hpf", 0, "high pass filter, used to cut off lower frequencies which can overpower the bottom end of the visualization")
+
+	// visualization options
+	barCount := flag.Int("bar-count", 64, "number of eq bars to render, more bars equals thinner bars overall. 32, 64, 128 are good places to start")
+	rainbow := flag.Bool("rainbow", false, "rainbow mode does exactly what it says, applies a gradient rainbow to the EQ")
+	baseColor := flag.String("base-color", "ffffff", "base color used to color the EQ bars, accepts a hex value")
 
 	flag.Parse()
 
@@ -41,7 +55,7 @@ func main() {
 		fmt.Println("Error opening WAV file:", err)
 		return
 	}
-	colorLog(colorGreen, fmt.Sprintf("successfully read %s", *inputWAVFile))
+	colorLog(colorCyan, fmt.Sprintf("successfully read %s", *inputWAVFile))
 	defer f.Close()
 
 	decoder, err := wav.New(f)
@@ -59,22 +73,48 @@ func main() {
 	for i, sample := range samples {
 		sampleBuf[i] = float64(sample)
 	}
+	colorLog(colorCyan, fmt.Sprintf("decoded sample %s", *inputWAVFile))
 
 	sampleRate := int(decoder.SampleRate)
 	duration := float64(len(samples)) / float64(sampleRate)
-  numBins := 128
-	spectrogram, frameDuration := createSpectrogram(sampleBuf, sampleRate, *windowSize)
-	normalizedSpectrogram := normalizeSpectrogram(spectrogram, sampleRate, numBins)
+	numBins := 128
+	spectrogram := make([][]float64, len(samples))
+	normalizedSpectrogram := make([][]float64, len(samples))
+	frameDuration := 0.0
+
+	if *hpf == 0 {
+		colorLog(colorCyan, fmt.Sprintf("bypassing high-pass filter"))
+		spectrogram, frameDuration = createSpectrogram(sampleBuf, sampleRate, *windowSize)
+		normalizedSpectrogram = normalizeSpectrogram(spectrogram, sampleRate, numBins)
+	} else {
+		// Apply the high-pass filter
+		colorLog(colorCyan, fmt.Sprintf("applying high-pass filter"))
+		filteredSamples := highPassFilter(sampleBuf, sampleRate, float64(*hpf))
+		spectrogram, frameDuration = createSpectrogram(filteredSamples, sampleRate, *windowSize)
+		normalizedSpectrogram = normalizeSpectrogram(spectrogram, sampleRate, numBins)
+	}
+
+	// Apply interpolation to the normalized spectrogram
+	interpolationFactor := 0.8 // Adjust this value to control the smoothness (0 to 1)
+	smoothedSpectrogram := make([][]float64, 0, len(normalizedSpectrogram)*2-1)
+
+	for i := 0; i < len(normalizedSpectrogram)-1; i++ {
+		smoothedSpectrogram = append(smoothedSpectrogram, normalizedSpectrogram[i])
+		interpolatedFrame := interpolateFrames(normalizedSpectrogram[i], normalizedSpectrogram[i+1], interpolationFactor)
+		smoothedSpectrogram = append(smoothedSpectrogram, interpolatedFrame)
+	}
+	smoothedSpectrogram = append(smoothedSpectrogram, normalizedSpectrogram[len(normalizedSpectrogram)-1])
+	nFrames := len(smoothedSpectrogram)
 
 	// generate PNG images
 	if err := os.MkdirAll(*frameOutputDir, 0755); err != nil {
 		fmt.Println("Error creating output directory:", err)
 		return
 	}
+	colorLog(colorCyan, fmt.Sprintf("created output dir for frames %s", *frameOutputDir))
 
-	nWorkers := 8 // Number of concurrent workers
-	nFrames := len(normalizedSpectrogram)
-	frameRate := 2.0 / frameDuration
+	nWorkers := runtime.NumCPU() // Number of concurrent workers
+	frameRate := 4.0 / frameDuration
 	jobs := make(chan int, nFrames)
 	results := make(chan error, nFrames)
 	hashValue := generateHash(*inputWAVFile)
@@ -83,22 +123,22 @@ func main() {
 	for w := 0; w < nWorkers; w++ {
 		go func() {
 			for i := range jobs {
-				frame := normalizedSpectrogram[i]
-				img := renderFrame(frame, i, nFrames, hashValue, float64(*scaleFactor))
+				frame := smoothedSpectrogram[i] // Use smoothedSpectrogram
+				img := renderFrame(frame, i, nFrames, hashValue, *scaleFactor, *barCount, *rainbow, *baseColor)
 				outputFile := filepath.Join(*frameOutputDir, fmt.Sprintf("frame%05d.png", i))
 				err := gg.SavePNG(outputFile, img)
 				results <- err
 			}
+
 		}()
 	}
 
 	// Send jobs
-	colorLog(colorGreen, "rendering frames")
+	colorLog(colorCyan, "rendering frames")
 	progressBarWidth := 50
 	for i := 0; i < nFrames; i++ {
 		jobs <- i
 	}
-
 	close(jobs)
 
 	// Receive results
@@ -133,24 +173,33 @@ func main() {
 
 	// remove frames
 	if !*keepFrames {
+		colorLog(colorCyan, "cleaning up...removing frames directory")
 		err := os.RemoveAll(*frameOutputDir)
 		if err != nil {
 			log.Fatal(err)
 		}
-		colorLog(colorGreen, "cleaning up...removed frames directory")
+		colorLog(colorCyan, "frames deleted")
 	} else {
 		colorLog(colorYellow, "leaving frames behind")
 	}
 
-	colorLog(colorRed, fmt.Sprintf("your music video is ready!!: %s", *outputFile))
+	colorLog(colorCyan, fmt.Sprintf("Your music video is ready at %s", *outputFile))
 }
 
-func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64, scaleFactor float64) image.Image {
-	width := 1280
+func interpolateFrames(frame1, frame2 []float64, factor float64) []float64 {
+	interpolatedFrame := make([]float64, len(frame1))
+	for i := range frame1 {
+		interpolatedFrame[i] = frame1[i]*(1-factor) + frame2[i]*factor
+	}
+	return interpolatedFrame
+}
+
+func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64, scaleFactor float64, barCount int, rainbow bool, baseColor string) image.Image {
+	width := 1920
 	if width%2 != 0 {
 		width += 1 // Ensure width is divisible by 2
 	}
-	height := 720
+	height := 1080
 	if height%2 != 0 {
 		height += 1 // Ensure height is divisible by 2
 	}
@@ -159,12 +208,11 @@ func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64,
 	dc.SetRGB(0, 0, 0)
 	dc.Clear()
 
-	numBars := 62
-	barWidth := float64(width) / float64(numBars)
+	barWidth := float64(width) / float64(barCount)
 	frameLen := len(frame)
-	binSize := frameLen / numBars
+	binSize := frameLen / barCount
 
-	for i := 0; i < numBars; i++ {
+	for i := 0; i < barCount; i++ {
 		startBin := i * binSize
 		endBin := (i + 1) * binSize
 
@@ -183,9 +231,21 @@ func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64,
 			avgValue = 1.0
 		}
 
-		// Set color to a constant value
-		colorValue := 1.0
-		dc.SetRGB(colorValue, colorValue, colorValue)
+		r, g, b, err := parseHexColor(baseColor)
+		if err != nil {
+			fmt.Printf("error parsing hex baseColor value: %s\n", err)
+		}
+
+		// SetRBB expects values between 0 and 1, so we have to divide by 255
+		dc.SetRGB(float64(r)/255, float64(g)/255, float64(b)/255)
+
+		if rainbow {
+			// Create a gradient for the EQ bars from red to violet
+			red := math.Sin(0.1*float64(i)+0)*127 + 128
+			green := math.Sin(0.1*float64(i)+2*math.Pi/3)*127 + 128
+			blue := math.Sin(0.1*float64(i)+4*math.Pi/3)*127 + 128
+			dc.SetRGB(red/255, green/255, blue/255)
+		}
 
 		// Draw a rectangle based on the scaled average value
 		x := float64(i) * barWidth
@@ -199,7 +259,7 @@ func renderFrame(frame []float64, frameIndex, totalFrames int, hashValue uint64,
 }
 
 func createSpectrogram(samples []float64, sampleRate int, windowSize int) ([][]float64, float64) {
-	colorLog(colorGreen, "creating spectrogram")
+	colorLog(colorCyan, "creating spectrogram")
 	stepSize := windowSize // Set stepSize equal to windowSize, no overlap
 	nFrames := (len(samples)-windowSize)/stepSize + 1
 
@@ -225,12 +285,12 @@ func createSpectrogram(samples []float64, sampleRate int, windowSize int) ([][]f
 }
 
 func createMP4(inputWAVFile, frameOutputDir, outputMP4File string, frameRate float64, duration float64) error {
-	colorLog(colorGreen, "sending frames to ffmpeg")
+	colorLog(colorCyan, "sending frames to ffmpeg")
 	ffmpegCmd := "ffmpeg"
 	inputPattern := filepath.Join(frameOutputDir, "frame%05d.png")
 	args := []string{
 		"-r", fmt.Sprintf("%.2f", frameRate), // Frame rate
-		"-thread_queue_size", "2048",
+		"-thread_queue_size", "8192",
 		"-i", inputPattern,
 		"-i", inputWAVFile,
 		"-c:v", "libx264", // Video codec
@@ -326,7 +386,7 @@ func normalizeSpectrogram(spectrogram [][]float64, sampleRate int, numBins int) 
 		normalizedSpectrogram[i] = normalizedFrame
 	}
 
-	colorLog(colorGreen, "normalized spectrogram")
+	colorLog(colorCyan, "normalized spectrogram")
 	return normalizedSpectrogram
 }
 
@@ -343,6 +403,46 @@ func generateHash(inputWAVFile string) uint64 {
 		colorLog(colorRed, fmt.Sprintf("Error generating hash:", err))
 		return 0
 	}
-	colorLog(colorGreen, "generated hash")
+	colorLog(colorCyan, "generated hash")
 	return h.Sum64()
+}
+
+func highPassFilter(samples []float64, sampleRate int, cutoffFrequency float64) []float64 {
+	alpha := math.Exp(-2 * math.Pi * cutoffFrequency / float64(sampleRate))
+	filteredSamples := make([]float64, len(samples))
+	for i := 1; i < len(samples); i++ {
+		filteredSamples[i] = alpha * (filteredSamples[i-1] + samples[i] - samples[i-1])
+	}
+	return filteredSamples
+}
+
+func parseHexColor(s string) (uint32, uint32, uint32, error) {
+	if strings.HasPrefix(s, "#") {
+		s = s[1:]
+	}
+
+	if len(s) != 6 {
+		return 0, 0, 0, fmt.Errorf("invalid format")
+	}
+
+	redHex := s[0:2]
+	greenHex := s[2:4]
+	blueHex := s[4:6]
+
+	red, err := strconv.ParseUint(redHex, 16, 8)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	green, err := strconv.ParseUint(greenHex, 16, 8)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	blue, err := strconv.ParseUint(blueHex, 16, 8)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return uint32(red), uint32(green), uint32(blue), nil
 }
