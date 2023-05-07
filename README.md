@@ -68,17 +68,16 @@ ffmpeg version 4.2.7-0ubuntu0.1 Copyright (c) 2000-2022 the FFmpeg developers
 
 In this run, we have the following arguments set:
 
-* --scale-factor 1.0
+* --scale-factor 1.5
 * --hpf 100
 * --bar-count 8
-* --smoothing-size 0.2
 * --base-color f28500 # should be a tangerine orange
 
-Audio is from [The Atomic Music Machine on Soundcloud](https://soundcloud.com/the-atomic-music-machine/goodbye-winter)
+Audio is [Memories of Atlantis by The Atomic Music Machine](https://soundcloud.com/the-atomic-music-machine/memories-of-atlantis)
 
 Click on the screenshot below to view the video on YouTube:
 
-[![example video](https://i.ytimg.com/vi/BRkeC26M82o/hqdefault.jpg)](https://www.youtube.com/watch?v=BRkeC26M82o)
+[![example video](https://i.ytimg.com/vi/nhV_wMXr1aA/hqdefault.jpg)](https://www.youtube.com/watch?v=nhV_wMXr1aA)
 
 ## Example Video 2
 
