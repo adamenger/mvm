@@ -93,10 +93,14 @@ Audio is [Snowbridge by The Atomic Music Machine](https://soundcloud.com/the-ato
 
 ## Example Video 3
 
-In this run, we have the following arguments set:
-* --scale-factor 5.0
-* --hpf 30
+In this run, we have the following arguments set. Also this one adds my favorite argument `--rainbow`!
+
+* --scale-factor 2.0
+* --hpf 3000
 * --bar-count 64
 * --rainbow
+* --smoothing-size 1.0
 
-[![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)
+Audio is [Queen of Dub by The Atomic Music Machine](https://soundcloud.com/the-atomic-music-machine/queen-of-dub)
+
+[![example video](https://i.ytimg.com/vi/8RQjop12OiI/hqdefault.jpg)](https://www.youtube.com/watch?v=8RQjop12OiI)
