@@ -67,11 +67,14 @@ ffmpeg version 4.2.7-0ubuntu0.1 Copyright (c) 2000-2022 the FFmpeg developers
 ## Example Video 1
 
 In this run, we have the following arguments set:
+
 * --scale-factor 1.0
 * --hpf 100
 * --bar-count 8
 * --smoothing-size 0.2
 * --base-color f28500 # should be a tangerine orange
+
+Audio is from [The Atomic Music Machine on Soundcloud](https://soundcloud.com/the-atomic-music-machine/goodbye-winter)
 
 [![example video](https://i.ytimg.com/vi/BRkeC26M82o/hqdefault.jpg)](https://www.youtube.com/watch?v=BRkeC26M82o)
 
@@ -79,11 +82,14 @@ In this run, we have the following arguments set:
 
 In this run, we have the following arguments set:
 * --scale-factor 2.0
-* --hpf 30
+* --hpf 300
 * --bar-count 32
-* --rainbow
+* --base-color FF3659
+* --smoothing-size 0.6
 
-[![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)
+Audio is [Snowbridge by The Atomic Music Machine](https://soundcloud.com/the-atomic-music-machine/snowbridge)
+
+[![example video](https://i.ytimg.com/vi/6O0GNW-yCn0/hqdefault.jpg)](https://www.youtube.com/watch?v=6O0GNW-yCn0)
 
 ## Example Video 3
 
