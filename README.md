@@ -76,6 +76,8 @@ In this run, we have the following arguments set:
 
 Audio is from [The Atomic Music Machine on Soundcloud](https://soundcloud.com/the-atomic-music-machine/goodbye-winter)
 
+Click on the screenshot below to view the video on YouTube:
+
 [![example video](https://i.ytimg.com/vi/BRkeC26M82o/hqdefault.jpg)](https://www.youtube.com/watch?v=BRkeC26M82o)
 
 ## Example Video 2
@@ -88,6 +90,8 @@ In this run, we have the following arguments set:
 * --smoothing-size 0.6
 
 Audio is [Snowbridge by The Atomic Music Machine](https://soundcloud.com/the-atomic-music-machine/snowbridge)
+
+Click on the screenshot below to view the video on YouTube:
 
 [![example video](https://i.ytimg.com/vi/6O0GNW-yCn0/hqdefault.jpg)](https://www.youtube.com/watch?v=6O0GNW-yCn0)
 
@@ -102,5 +106,7 @@ In this run, we have the following arguments set. Also this one adds my favorite
 * --smoothing-size 1.0
 
 Audio is [Queen of Dub by The Atomic Music Machine](https://soundcloud.com/the-atomic-music-machine/queen-of-dub)
+
+Click on the screenshot below to view the video on YouTube:
 
 [![example video](https://i.ytimg.com/vi/8RQjop12OiI/hqdefault.jpg)](https://www.youtube.com/watch?v=8RQjop12OiI)
