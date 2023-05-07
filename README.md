@@ -35,6 +35,8 @@ Usage of ./mvm:
         rainbow mode does exactly what it says, applies a gradient rainbow to the EQ
   -scale-factor float
         adjust this value to change the shape movement, you may want to up the hpf when upping scale-factor
+  -smoothing-size float
+        smoothing size, attempts to smooth out movement between frames (default 0.5)
   -window-size int
         sample window size (default 4096)
 ```
@@ -65,11 +67,13 @@ ffmpeg version 4.2.7-0ubuntu0.1 Copyright (c) 2000-2022 the FFmpeg developers
 ## Example Video 1
 
 In this run, we have the following arguments set:
-* --scale-factor 2.0
-* --hpf 30
-* --bar-count 16
+* --scale-factor 1.0
+* --hpf 100
+* --bar-count 8
+* --smoothing-size 0.2
 * --base-color f28500 # should be a tangerine orange
-[![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)
+
+[![example video](https://i.ytimg.com/vi/BRkeC26M82o/hqdefault.jpg)](https://www.youtube.com/watch?v=BRkeC26M82o)
 
 ## Example Video 2
 
@@ -78,6 +82,7 @@ In this run, we have the following arguments set:
 * --hpf 30
 * --bar-count 32
 * --rainbow
+
 [![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)
 
 ## Example Video 3
@@ -87,4 +92,5 @@ In this run, we have the following arguments set:
 * --hpf 30
 * --bar-count 64
 * --rainbow
+
 [![example video](https://i.ytimg.com/vi/mg_OhM-pwA8/hqdefault.jpg)](https://www.youtube.com/watch?v=mg_OhM-pwA8)

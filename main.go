@@ -37,6 +37,7 @@ func main() {
 
 	// windowSize is how big each "window" in the sample is.
 	windowSize := flag.Int("window-size", 4096, "sample window size")
+  smoothingSize := flag.Float64("smoothing-size", 0.5, "smoothing size, attempts to smooth out movement between frames")
 
 	// scaleFactor increases the responsiveness of each bar in the EQ. Set it too high and most bars will just stay at maximum height
 	scaleFactor := flag.Float64("scale-factor", 0.0, "adjust this value to change the shape movement, you may want to up the hpf when upping scale-factor")
@@ -95,7 +96,7 @@ func main() {
 	}
 
 	// Apply interpolation to the normalized spectrogram
-	interpolationFactor := 0.8 // Adjust this value to control the smoothness (0 to 1)
+	interpolationFactor := *smoothingSize // Adjust this value to control the smoothness (0 to 1)
 	smoothedSpectrogram := make([][]float64, 0, len(normalizedSpectrogram)*2-1)
 
 	for i := 0; i < len(normalizedSpectrogram)-1; i++ {
